@@ -31,19 +31,15 @@ The [`tests/`](tests) directory is used for running tests (not exhaustive).
 
 We provide a general module named `mcl_wrapper` that is designed to be integrated in any model from the [transformers](https://github.com/huggingface/transformers) library.
 
-> [!IMPORTANT]
-> You need a [HuggingFace](https://huggingface.co/) access token for most models. Set it with `export HF_TOKEN=your_token_here` before running the examples.
+> **⚠️ Important:** You need a [HuggingFace](https://huggingface.co/) access token for most models. Set it with `export HF_TOKEN=your_token_here` before running the examples.
 
-> [!NOTE]
-> The `mcl_wrapper` module should work with any Hugging Face model from the transformers library with minimal configuration changes.
+> **📝 Note:** The `mcl_wrapper` module should work with any Hugging Face model from the transformers library with minimal configuration changes.
 
 To use it, you can create a minimal environment with `conda create -y -n testenv python=3.10.15`. Activate with `conda activate testenv` and install the required packages with `pip install -r mcl_wrapper/requirements.txt`.
 
-> [!IMPORTANT]
-> Always run `patch_peft_for_mcl(enable=True)` before using the mcl_wrapper to ensure proper PEFT library patching.
+> **⚠️ Important:** Always run `patch_peft_for_mcl(enable=True)` before using the mcl_wrapper to ensure proper PEFT library patching.
 
-> [!TIP]
-> For faster training, consider using `use_group_lora=True` in the MCL parameters, which allows parallelization over hypotheses.
+> **💡 Tip:** For faster training, consider using `use_group_lora=True` in the MCL parameters, which allows parallelization over hypotheses.
 
 ```python
 from mcl_wrapper import get_peft_mcl, MCLTrainer, patch_peft_for_mcl
@@ -121,8 +117,7 @@ To reproduce the synthetic data experiments, first go to the toy dir with `cd to
 
 Create a virtual environment with `conda create -y -n synthenv python=3.10.15`. Activate with `conda activate synthenv` and install the required packages with `pip install -r toy/requirements.txt`. 
 
-> [!NOTE]
-> LaTeX is enabled plot rendering. Install it with: `sudo apt-get install -y dvipng texlive-latex-extra texlive-fonts-recommended cm-super`.
+> **📝 Note:** LaTeX is enabled plot rendering. Install it with: `sudo apt-get install -y dvipng texlive-latex-extra texlive-fonts-recommended cm-super`.
 
 ### 🔄 Training and Visualisation
 
@@ -205,8 +200,7 @@ The datasets will be placed in `Qwen2-Audio/data`.
 <summary><h4>
 ⚙️(Optional) Reproducing dataset pre-processing </h4></summary>
 
-> [!TIP]
-> We recommend using our preprocessed data rather than reproducing the preprocessing steps, unless you specifically need to modify the preprocessing pipeline.
+> **💡 Tip:** We recommend using our preprocessed data rather than reproducing the preprocessing steps, unless you specifically need to modify the preprocessing pipeline.
 
 If you want instead to download your own version of AudioCaps and Clotho and reproduce the steps, the download of the data followed by preprocessing on AudioCaps and Clotho can be done by first installing required packages with `sudo apt install -y openjdk-11-jdk ffmpeg zip && python3 -m pip install -U yt-dlp[default]`. You can then run:
 ```shell
