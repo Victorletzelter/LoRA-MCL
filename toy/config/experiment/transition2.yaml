@@ -1,0 +1,36 @@
+# @package _global_
+
+name: transition2
+vocab_size: 2  
+hidden_size: 64 
+n_layer: 2  
+n_epochs: 1  
+n_head: 2
+p1: 0.7
+q1: 0.8
+p2: 0.8
+q2: 0.25
+wta_mode: relaxed-wta
+wta_params_epsilon: 0.1
+transition_matrix: Null
+tokenizer_path: Null
+eval_steps: 10
+evaluation_strategy: steps
+N_hyps_min: 1
+N_hyps_max: 2
+learning_rate: 1e-4
+use_latent_variables: True
+use_disjoint_latent_variables: True
+lr_scheduler_type: cosine
+use_lora: True 
+lora_r: 64 
+lora_alpha: 64
+lora_dropout: 0.
+window_size: 5
+normalize_loss_by_T: True
+seed: 1235
+train: True
+path_pickle: Null
+batch_size: 128
+seq_len: 32
+N_it: 501

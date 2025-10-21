@@ -1,0 +1,12 @@
+mlruns/
+results/
+local_cache/
+__pycache__/
+logs/
+outputs/
+output-trash/
+DeepSpeed/
+trash/
+.vscode
+dummy_path/
+toy/results/

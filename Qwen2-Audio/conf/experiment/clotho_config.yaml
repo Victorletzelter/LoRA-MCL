@@ -1,0 +1,60 @@
+# @package _global_
+
+# See conf/model/default.yaml for a detailed description of the parameters
+
+model:
+  # Data parameters
+  max_length: 480000          # Adjusted max length (30 sec of 16kHz audio)
+  is_debug: false
+  load_model: true
+  data_root: "data"
+  train_hdfs:
+    - /datasets_local/clotho_v2/clotho_dev_resample_mean_raw_ident_raw.hdf
+  val_hdfs:
+    - /datasets_local/clotho_v2/clotho_val_resample_mean_raw_ident_raw.hdf
+  test_hdfs:
+    - /datasets_local/clotho_v2/clotho_eval_resample_mean_raw_ident_raw.hdf
+  batch_size: 1
+  n_workers: 4
+  audio_padding: "longest"
+  text_padding: "max_length"
+  train_cols: ["audio", "audio_shape", "captions", "dataset", "subset", "source"]
+  val_cols: ["audio", "audio_shape", "captions", "dataset", "subset", "source"]
+  test_cols: ["audio", "audio_shape", "captions", "dataset", "subset", "source", "fname", "index"]
+
+  # Training hyperparameters
+  output_dir: "./results"
+  logging_dir: "./logs"
+  logging_strategy: "steps"
+  logging_steps: 100
+  eval_strategy: "epoch"
+  save_strategy: "epoch"
+  optim: "adamw_torch"
+  adam_beta1: 0.9
+  adam_beta2: 0.98
+  adam_epsilon: 1e-6
+  learning_rate: 1e-5
+  lr_scheduler_type: "cosine_with_min_lr"
+  warmup_ratio: 0.1
+  min_lr_rate: 0.1
+  num_warmup_steps: 3000
+  per_device_train_batch_size: 1
+  per_device_eval_batch_size: 1
+  num_train_epochs: 10
+  weight_decay: 0.05
+  max_grad_norm: 1.0
+  bf16: true
+  bf16_full_eval: true
+  save_total_limit: 2
+  load_best_model_at_end: true
+  remove_unused_columns: false
+  pretrained_repo: "Qwen/Qwen2-Audio-7B-Instruct"
+
+  # Model parameters
+  num_hyps: 1
+
+task_name: "finetune_bf16"
+pickle_path: Null
+do_train: true
+do_inference: true
+do_compute_metrics: true

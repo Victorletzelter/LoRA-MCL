@@ -1,0 +1,125 @@
+# @package model
+
+# Data and model parameters
+max_length: 160000 # Adjusted max length (10 sec of 16kHz audio)
+cache_dir: Null # Cache directory for the model
+is_debug: false # Whether to run in debug mode
+load_model: true # Whether to load the model
+dataloader_num_workers: 4 # Number of workers for the dataloader
+torch_compile: false # Whether to compile the model with torch.compile
+data_root: "data" # Root directory for the data
+train_hdfs:
+  - ${paths.data_dir}/HDF/clotho_dev_resample_mean_raw_ident_raw.hdf
+val_hdfs:
+  - ${paths.data_dir}/HDF/clotho_val_resample_mean_raw_ident_raw.hdf
+test_hdfs:
+  - ${paths.data_dir}/HDF/clotho_eval_resample_mean_raw_ident_raw.hdf
+n_workers: 4 # Number of workers for the dataloader
+audio_padding: "longest" # Padding strategy for the audio
+text_padding: "max_length" # Padding strategy for the text
+train_cols: ["audio", "audio_shape", "captions", "dataset", "subset", "source"] # Columns for the training data
+val_cols: ["audio", "audio_shape", "captions", "dataset", "subset", "source"] # Columns for the validation data
+test_cols: ["audio", "audio_shape", "captions", "dataset", "subset", "source", "fname", "index"] # Columns for the test data
+add_eos_token_data: true # Whether to add the EOS token to the data
+prompt_template_with_space: false # Whether to use a space in the prompt
+
+# Training hyperparameters
+output_dir: "./results" # Output directory for the model
+logging_dir: "./logs" # Logging directory for the model
+logging_strategy: "steps" # Logging strategy for the model
+logging_steps: 100 # Logging steps for the model
+eval_strategy: "epoch" # Evaluation strategy for the model: either "epoch" or "steps"
+eval_steps: 10 # Evaluation steps for the model (if eval_strategy is "steps")
+save_strategy: "epoch" # Save strategy for the model: either "epoch" or "steps"
+optim: "adamw_torch" # Optimizer for the model
+adam_beta1: 0.9 # Beta1 for Adam optimizer
+adam_beta2: 0.98 # Beta2 for Adam optimizer
+adam_epsilon: 1e-6 # Epsilon for Adam optimizer
+learning_rate: 1e-5 # Learning rate
+lr_scheduler_type: "cosine_with_min_lr" # Scheduler type
+warmup_ratio: 0.1 # Warmup ratio
+min_lr_rate: 1e-6 # Minimum learning rate
+num_warmup_steps: 3000 # Number of warmup steps (if warmup_ratio is not defined)
+per_device_train_batch_size: 4 # Training batch size per device
+per_device_eval_batch_size: 4 # Evaluation batch size per device
+num_train_epochs: 5 # Number of training epochs
+weight_decay: 0.05 # Weight decay for the optimizer
+max_grad_norm: 1.0 # Maximum gradient norm for gradient clipping
+bf16: true # Whether to use bf16 for the model
+bf16_full_eval: true # Whether to use bf16 for full evaluation
+save_total_limit: 2 # Number of models to save
+load_best_model_at_end: true # Whether to load the best model at the end of the training
+remove_unused_columns: false # Whether to remove unused columns from the dataset
+pretrained_repo: "Qwen/Qwen2-Audio-7B-Instruct" # Pretrained HF repository for the model
+quantization: false # Whether to quantize the model
+deepspeed: false # Whether to use deepspeed for the model
+wta_training_mode: "wta" # WTA training mode
+wta_params_epsilon: 0.1 # Epsilon for Relaxed WTA
+wta_params_ini_temp: 1.0 # Initial temperature for Annealed MCL
+wta_params_fin_temp: 1e-6 # Final temperature for Annealed MCL
+wta_params_decay_rate: 0.999 # Decay rate for the temperature
+wta_params_schedule_mode: "global_step" # Schedule mode for the temperature scheduler: either "global_step" or "epoch"
+eval_accumulation_steps: 100 # Number of accumulation steps for the evaluation (to avoid OOM)
+gradient_accumulation_steps: 1 # Number of accumulation steps for the gradient
+do_save_model: true # Whether to save the model
+early_stopping_patience: 10 # Patience for the early stopping (in epochs)
+early_stopping_threshold: 0.001 # Threshold for the early stopping
+max_steps: -1 # Maximum number of steps for the training (-1 means no maximum)
+
+# Generation parameters
+generation_config:
+  max_pred_size: Null # Maximum prediction size for the generation
+  min_pred_size: Null # Minimum prediction size for the generation
+  beam_size: 1 # Beam size with Beam Search
+  num_return_sequences: 5 # Number of returned sequences (per hypothesis if MCL is used)
+  do_sample: false # Whether to apply sampling-based decoding
+  temperature: 1.0 # Temperature for the generation (if do_sample is true)
+  top_k: 50 # Top-k for the generation (if do_sample is true)
+  top_p: 1.0 # Top-p for the generation (if do_sample is true)
+  diversity_penalty: 0.0 # Diversity penalty (lambda) in Diverse Beam Search (DBS)
+  num_beam_groups: 1 # Number of beam groups in DBS
+  repetition_penalty: 1.1 # Repetition penalty for the generation
+  chat_format: "chatml" # Chat format for the generation
+  max_new_tokens: Null # Maximum new tokens for the generation
+  penalty_alpha: Null # Penalty alpha for the generation
+  typical_p: Null # Typical p for the generation (if do_sample is true)
+additional_generation_config:
+    output_hidden_states: false # Whether to output the hidden states
+    output_scores: true # Whether to output the scores
+    return_dict_in_generate: true # Whether to return the dictionary in the generate method
+    compute_aac_scores: true # Whether to compute the AAC scores
+    compute_diversity_metrics: True # Whether to compute the diversity metrics
+    _compute_oracle_mean_nll: true # Whether to compute the oracle mean NLL
+    return_full_scores: true # Whether to return the full scores (for each example)
+
+# LoRA parameters
+num_hyps: 5 # Number of hypotheses for MCL
+native_lora_enabled: true # Whether to use native LoRA
+native_group_lora_enabled: true # Whether to use native group LoRA
+native_lora_r: 8 # Rank for the native LoRA
+native_lora_alpha: 8 # Alpha for the native LoRA
+native_lora_dropout: 0.1 # Dropout for the native LoRA
+native_lora_bias: "none" # Bias for the native LoRA
+native_lora_target_modules: ["q_proj", "k_proj", "v_proj", "down_proj", "up_proj"] # Target modules for the native LoRA
+native_lora_exclude_modules: Null # Exclude modules for the native LoRA
+use_moe_lora: False # Whether to use LoRA-MoE
+num_experts: 1 # Number of experts for the MoE
+init_zero_router: true # Whether to initialize the router with zeros
+stochastic_router: Null # Whether to use a stochastic router (during inference)
+expert_specific: Null # Whether to use expert-specific LoRA (during inference)
+fast_version: true # Whether to use the fast version of LoRA-MoE
+sparse_moe_enabled: false # Whether to use sparse MoE
+router_aux_loss_coef: 0.01 # Auxiliary loss coefficient for the router
+top_k_sparse_moe: 2 # Top-k for the sparse MoE
+
+# TTA parameters
+tta_enabled: false # Whether to use Test-Time Augmentation (TTA) at inference
+tta_mode: Null # Mode for the TTA. Currently supported: "spec_augment"
+greedy_sh_tta: Null # Set to Single to use greedy search for each tta sample (this will override the beam_size, but it need to be used to instead of setting beam size to 1 to avoid HF errors)
+# Or to Double to use beam size 2 for each tta sample
+time_mask_percentage: 0.1 # Time mask percentage for the TTA
+freq_mask_percentage: 0.15 # Frequency mask percentage for the TTA
+
+# Libraries-related parameters
+use_mcl_wrapper: true # Whether to use the MCL wrapper
+use_local_transformers: false # Whether to use the local transformers

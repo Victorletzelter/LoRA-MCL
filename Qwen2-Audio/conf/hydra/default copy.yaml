@@ -1,0 +1,31 @@
+# @package hydra
+
+defaults:
+  - override hydra_logging: colorlog
+  - override job_logging: custom  # redirect log file to output_subdir
+  - override launcher: basic
+  - override sweeper: basic
+  - _self_
+
+job:
+  # note: add default num for single-runs
+  num: 0
+
+run:
+  # This sets the output directory for each run with a timestamp
+  dir: outputs/${now:%Y-%m-%d_%H-%M-%S}_${run_name}
+
+# job_logging:
+#   version: 1
+#   formatters:
+#     simple:
+#       format: "[%(asctime)s] %(levelname)s: %(message)s"
+#   handlers:
+#     console:
+#       class: logging.StreamHandler
+#       formatter: simple
+#       level: INFO
+#       stream: ext://sys.stdout
+#   root:
+#     level: INFO
+#     handlers: [console]

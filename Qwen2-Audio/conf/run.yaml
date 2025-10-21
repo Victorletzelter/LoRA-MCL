@@ -1,0 +1,24 @@
+# @package _global_
+
+run_name: "default"
+task_name: "train"
+local_rank: -1
+do_train: false
+do_inference: true
+do_compute_metrics: false
+ckpt_path: null
+out_dir: setup
+max_test_batches: null
+max_train_batches: null
+max_val_batches: null
+pickle_path: Null
+seed: 1234
+
+defaults:
+  - hydra: new_default
+  - paths: default
+  - _self_
+  - model: default
+  - mlflow: default
+  - other: default
+  - experiment: none

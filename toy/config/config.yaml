@@ -1,0 +1,44 @@
+# @package _global_
+
+defaults:
+  - _self_
+  - experiment: transition2
+  
+name: transition2
+vocab_size: 2  
+hidden_size: 64  
+n_layer: 2  
+n_epochs: 1  
+n_head: 2
+batch_size: 64
+N_it: 251
+p1: 0.7
+q1: 0.8
+p2: 0.8
+q2: 0.25
+wta_mode: wta
+wta_params_epsilon: 0.
+transition_matrix: Null
+tokenizer_path: Null
+seq_len: 64
+eval_steps: 10
+evaluation_strategy: steps
+N_hyps_min: 1
+N_hyps_max: 2
+learning_rate: 1e-4
+use_latent_variables: True
+use_disjoint_latent_variables: True
+lr_scheduler_type: cosine
+use_lora: True  # Enable LoRA
+lora_r: 64  # LoRA attention dimension
+lora_alpha: 64  # LoRA alpha parameter
+lora_dropout: 0.  # LoRA dropout
+window_size: 1
+normalize_loss_by_T: True
+seed: 1235
+path_pickle: Null
+train: True
+load_th_loss_mle: False
+log_transition_matrices_during_training: False
+divide_rank_mcl: False
+multiply_rank_1_hyp: False

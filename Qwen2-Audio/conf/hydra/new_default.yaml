@@ -1,0 +1,8 @@
+# https://hydra.cc/docs/configure_hydra/intro/
+
+run:
+  dir: ${paths.log_dir}/${task_name}/${now:%Y-%m-%d_%H-%M-%S}_${run_name}
+
+sweep:
+  dir: ${paths.log_dir}/${task_name}/multiruns/${now:%Y-%m-%d}_${now:%H-%M-%S}_${run_name}
+  subdir: ${hydra.job.num}

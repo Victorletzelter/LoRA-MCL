@@ -1,0 +1,8 @@
+# @package audio_t
+
+_target_: "conette.transforms.get.get_resample_mean_raw"
+
+src_sr: ???
+tgt_sr: 16000
+mean_dim: 0
+device: "cuda_if_available"
