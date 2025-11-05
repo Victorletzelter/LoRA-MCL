@@ -3,13 +3,8 @@
 Example usage of the MCL wrapper with different models.
 """
 
-import sys
-import os
-import rootutils
-rootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
-
-from peft import LoraConfig  # Use standard LoraConfig
-from mcl_wrapper import get_peft_mcl, MCLTrainer, patch_peft_for_mcl
+from peft import LoraConfig
+from peft_mcl import get_peft_mcl, MCLTrainer, patch_peft_for_mcl
 import logging
 import torch
 from transformers import AutoTokenizer

@@ -121,5 +121,5 @@ time_mask_percentage: 0.1 # Time mask percentage for the TTA
 freq_mask_percentage: 0.15 # Frequency mask percentage for the TTA
 
 # Libraries-related parameters
-use_mcl_wrapper: true # Whether to use the MCL wrapper
+use_peft_mcl: true # Whether to use the MCL wrapper
 use_local_transformers: false # Whether to use the local transformers

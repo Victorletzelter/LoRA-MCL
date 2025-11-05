@@ -70,7 +70,7 @@ class HDFDataModule(AACDataModule):
         audio_padding: str = "batch",
         prompt_template_with_space: bool = False,
         add_eos_token_data: bool = False,
-        use_mcl_wrapper: bool = False,
+        use_peft_mcl: bool = False,
     ) -> None:
         root = osp.expanduser(osp.expandvars(root))
         super().__init__(
@@ -84,7 +84,7 @@ class HDFDataModule(AACDataModule):
             val_cols=list(val_cols),
             test_cols=list(test_cols),
         )
-        self.use_mcl_wrapper = use_mcl_wrapper
+        self.use_peft_mcl = use_peft_mcl
 
         # Process HDF paths
         def process_hdfs_args(hdfs: Union[str, Iterable[str]]) -> list[str]:
@@ -158,7 +158,7 @@ class HDFDataModule(AACDataModule):
 
             audios.append(audio_np)
             
-        if self.use_mcl_wrapper:
+        if self.use_peft_mcl:
             processed = self.processor(
             text=texts,
             # audio=audios,
@@ -237,7 +237,7 @@ class HDFDataModule(AACDataModule):
 
                 audios.append(audio_np)
 
-            if self.use_mcl_wrapper:
+            if self.use_peft_mcl:
                 processed = self.processor(
                 text=texts,
                 # audio=audios,
@@ -320,7 +320,7 @@ class HDFDataModule(AACDataModule):
                 audio_np = audio
 
             audios.append(audio_np)
-        if self.use_mcl_wrapper:
+        if self.use_peft_mcl:
             processed = self.processor(
                 text=texts,
                 # audio=audios,
