@@ -92,7 +92,7 @@ def setup_model_and_processor(cfg):
     is_debug = cfg.model.is_debug
     load_model = cfg.model.load_model  # This flag indicates whether to load a pre-trained model.
 
-    if cfg.model.use_mcl_wrapper:
+    if cfg.model.use_peft_mcl:
         from processor_patch import patch_qwen2audio_processor
         patch_qwen2audio_processor()
 
@@ -155,7 +155,7 @@ def setup_model_and_processor(cfg):
             config_model.top_k_sparse_moe = cfg.model.top_k_sparse_moe
 
             import torch
-            if cfg.model.native_lora_enabled and cfg.model.native_group_lora_enabled is False and cfg.model.use_mcl_wrapper is False:
+            if cfg.model.native_lora_enabled and cfg.model.native_group_lora_enabled is False and cfg.model.use_peft_mcl is False:
                 from local_transformers import Qwen2AudioForConditionalGeneration_MH_Lora
                 model = Qwen2AudioForConditionalGeneration_MH_Lora.from_pretrained(
                     ckpt_path_considered,
@@ -164,7 +164,7 @@ def setup_model_and_processor(cfg):
                     device_map=f"cuda:{int(os.getenv('LOCAL_RANK', 0))}",
                     torch_dtype=torch.bfloat16,
                 )
-            elif cfg.model.native_group_lora_enabled is True and cfg.model.use_mcl_wrapper is False:
+            elif cfg.model.native_group_lora_enabled is True and cfg.model.use_peft_mcl is False:
                 from local_transformers import Qwen2AudioForConditionalGeneration_MH_Group_Lora
                 model = Qwen2AudioForConditionalGeneration_MH_Group_Lora.from_pretrained(
                     ckpt_path_considered,
@@ -173,7 +173,7 @@ def setup_model_and_processor(cfg):
                     device_map=f"cuda:{int(os.getenv('LOCAL_RANK', 0))}",
                     torch_dtype=torch.bfloat16,
                 )
-            elif cfg.model.use_mcl_wrapper is False: # If mcl wrapper is not used, one of the two above must be used.
+            elif cfg.model.use_peft_mcl is False: # If mcl wrapper is not used, one of the two above must be used.
                 raise ValueError("Invalid model configuration")
     else:
         logger.info("Creating a new model instance (not loading pretrained checkpoint).")
@@ -203,7 +203,7 @@ def setup_model_and_processor(cfg):
         penalty_alpha=gen_config_dict.get("penalty_alpha", None),
         typical_p=gen_config_dict.get("typical_p", None),
     )
-    if cfg.model.use_mcl_wrapper is False:
+    if cfg.model.use_peft_mcl is False:
         model.generation_config = gen_config
 
     if cfg.model.native_lora_enabled:
@@ -242,10 +242,10 @@ def setup_model_and_processor(cfg):
                 # Add a barrier to ensure all processes are synchronized
                 torch.distributed.barrier()
         
-        if cfg.model.use_mcl_wrapper:
+        if cfg.model.use_peft_mcl:
             import sys
             sys.path.append(os.path.join(os.environ["PROJECT_ROOT"], ".."))
-            from mcl_wrapper import get_peft_mcl, patch_peft_for_mcl
+            from peft_mcl import get_peft_mcl, patch_peft_for_mcl
             from peft import LoraConfig
             patch_peft_for_mcl(enable=True) # Patch the updates to the peft library
             mcl_params = { # LoRA-MCL related parameters.
@@ -285,7 +285,7 @@ def setup_model_and_processor(cfg):
 
         # Add remaining adapters
         for i in range(1, num_hyps):
-            if cfg.model.use_mcl_wrapper is False and cfg.model.native_group_lora_enabled is False:
+            if cfg.model.use_peft_mcl is False and cfg.model.native_group_lora_enabled is False:
                 model.add_adapter(f"lora{i}", peft_config)
         if cfg.model.native_group_lora_enabled is True:
             all_adapters = [f"lora{i}" for i in range(cfg.model.num_hyps)]
@@ -295,7 +295,7 @@ def setup_model_and_processor(cfg):
                     module.set_adapter(all_adapters)
 
         logger.info("Remaining adapters added")
-        if cfg.ckpt_path is not None and cfg.model.native_lora_enabled is True and cfg.model.use_mcl_wrapper is False:
+        if cfg.ckpt_path is not None and cfg.model.native_lora_enabled is True and cfg.model.use_peft_mcl is False:
             for i in range(num_hyps):
                 model.load_adapter(os.path.join(cfg.ckpt_path, f"lora{i}"), adapter_name=f"lora{i}", is_trainable=cfg.do_train, torch_device=f"cuda:{int(os.getenv('LOCAL_RANK', 0))}")
 

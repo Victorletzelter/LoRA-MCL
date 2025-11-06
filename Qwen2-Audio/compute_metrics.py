@@ -66,7 +66,7 @@ def run_evaluation(cfg, processor):
         val_cols=cfg.model.val_cols,
         test_cols=cfg.model.test_cols,
         max_length=cfg.model.max_length,
-        use_mcl_wrapper=cfg.model.use_mcl_wrapper
+        use_peft_mcl=cfg.model.use_peft_mcl
         )
 
     data_module.setup("test")

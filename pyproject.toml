@@ -1,0 +1,57 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "peft-mcl"
+version = "0.1.0"
+description = "A general wrapper for applying Multiple Choice Learning with Low Rank Adapters to any Hugging Face transformers model for parameter-efficient fine-tuning."
+authors = [
+  { name="Victor Letzelter", email="letzelter.victor@hotmail.fr" }
+]
+readme = "README.md"
+license = { text = "Apache-2.0" }
+requires-python = ">=3.10"
+dependencies = [
+  "torch==2.6.0",
+  "transformers==4.50.0",
+  "peft==0.14.0",
+  "datasets==2.18.0",
+  "rootutils==1.0.7"
+]
+
+keywords = [
+  "machine-learning",
+  "deep-learning",
+  "transformers",
+  "lora",
+  "parameter-efficient",
+  "fine-tuning",
+  "multiple-choice-learning",
+  "winner-takes-all",
+  "diversity",
+  "large-language-model",
+]
+
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: Apache Software License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Topic :: Software Development :: Libraries :: Python Modules"
+]
+
+[project.urls]
+Homepage = "https://github.com/Victorletzelter/LoRA-MCL"
+Paper = "https://arxiv.org/abs/2507.10419"
+Repository = "https://github.com/Victorletzelter/LoRA-MCL"
+Issues = "https://github.com/Victorletzelter/LoRA-MCL/issues"
+
+[tool.setuptools]
+packages = ["peft_mcl"]

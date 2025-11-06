@@ -15,7 +15,7 @@ We propose LoRA-MCL, a training scheme that extends next-token prediction in lan
 
 The repository is organized as follows:
 
-- **General-Purpose LoRA-MCL Wrapper.** The [`mcl_wrapper/`](mcl_wrapper) directory provides a general wrapper for applying LoRA-MCL to any Hugging Face model with minimal configuration.
+- **General-Purpose LoRA-MCL Wrapper.** The [`peft_mcl/`](peft_mcl) directory provides a general wrapper for applying LoRA-MCL to any Hugging Face model with minimal configuration.
 
 - **Synthetic Data Experiments.** The [`toy/`](toy) directory contains experiments using Mixtures of Markov Chains for synthetic data evaluation.
 
@@ -29,23 +29,26 @@ The [`tests/`](tests) directory is used for running tests (not exhaustive).
 
 ## 🚀 Quick Start
 
-We provide a general module named `mcl_wrapper` that is designed to be integrated in any model from the [transformers](https://github.com/huggingface/transformers) library.
+We provide a general module named `peft_mcl` that is designed to be integrated in any model from the [transformers](https://github.com/huggingface/transformers) library.
 
 > **⚠️ Important:** You need a [HuggingFace](https://huggingface.co/) access token for most models. Set it with `export HF_TOKEN=your_token_here` before running the examples.
 
-> **📝 Note:** The `mcl_wrapper` module should work with any Hugging Face model from the transformers library with minimal configuration changes.
+> **📝 Note:** The `peft_mcl` module should work with any Hugging Face model from the transformers library with minimal configuration changes.
 
-To use it, you can create a minimal environment with `conda create -y -n testenv python=3.10.15`. Activate with `conda activate testenv` and install the required packages with `pip install -r mcl_wrapper/requirements.txt`.
-
-> **⚠️ Important:** Always run `patch_peft_for_mcl(enable=True)` before using the mcl_wrapper to ensure proper PEFT library patching.
-
-> **💡 Tip:** For faster training, consider using `use_group_lora=True` in the MCL parameters, which allows parallelization over hypotheses.
-
+To use the `peft_mcl` package, first clone the repository and create a conda environment:
+```shell
+git clone https://github.com/Victorletzelter/LoRA-MCL.git
+cd LoRA-MCL
+conda create -y -n testenv python=3.10.15
+conda activate testenv
+pip install -e .
+```
+See the example below to get started, or run [example_usage.py](example_usage.py) for a demo with dummy data.
 ```python
-from mcl_wrapper import get_peft_mcl, MCLTrainer, patch_peft_for_mcl
+from peft_mcl import get_peft_mcl, MCLTrainer, patch_peft_for_mcl
 from peft import LoraConfig
 import torch
-patch_peft_for_mcl(enable=True) # Patch the updates to the peft library
+patch_peft_for_mcl(enable=True) # Always run `patch_peft_for_mcl(enable=True)` before using peft_mcl to ensure proper PEFT library patching.
 # Standard LoRA configuration
 lora_r = 16 # LoRA Rank  
 lora_alpha = 16 # LoRA Alpha
@@ -61,7 +64,7 @@ lora_config = LoraConfig( # Standard LoRA configuration
 mcl_params = { # LoRA-MCL related parameters.
   'num_hyps': 3, # Number of hypotheses (K)
   'wta_training_mode' : "relaxed-wta", # "wta", "relaxed-wta" or "annealed-wta"
-  'use_group_lora' : False, # whether to use the Group LoRA implementation (that accelerates training)
+  'use_group_lora' : False, # For faster training, consider using `use_group_lora=True` which allows parallelization over hypotheses
   'wta_params_epsilon' : 0.05, # \\varepsilon when  wta_training_mode == 'relaxed-wta'
   # Parameters only used if 'wta_training_mode'='annealed-wta':
   'wta_params_ini_temp': 1.0, # initial temperature when 'wta_training_mode'='annealed-wta'
@@ -105,8 +108,6 @@ input_ids = ... # Input (tokenized) prompt
 hypothesis_idx = 0 # Hypothesis chosen for generation (should be in {0,...,num_hypotheses - 1})
 out = model.generate(inputs = input_ids, hypothesis_idx = hypothesis_idx)
 ```
-
-See [example_usage.py](example_usage.py) for an example with dummy data.
 
 <details>
 <summary><h2>🎲 Synthetic data example</h2></summary>
@@ -172,7 +173,7 @@ bash setup_env.sh
 ```
 An environment named `qwen_env` will be setup in `Qwen2-Audio/env`. You can then activate it with `PROJECT_DIR="$(pwd) ; source activate $PROJECT_DIR/env`.
 
-> Note that the implementation of LoRA-MCL in Qwen2-Audio was done without using the `mcl_wrapper`, but instead with a local copy of the transformers library in `Qwen2-Audio/local_transformers`. Although it is not fully tested yet, you can try using the `mcl_wrapper` by installing `pip install transformers==4.51.0` and setting `use_local_transformers=False` in `conf/model/default.yaml`.
+> Note that the implementation of LoRA-MCL in Qwen2-Audio was done without using the `peft_mcl`, but instead with a local copy of the transformers library in `Qwen2-Audio/local_transformers`. Although it is not fully tested yet, you can try using the `peft_mcl` by installing `pip install transformers==4.51.0` and setting `use_local_transformers=False` in `conf/model/default.yaml`.
 
 #### ⚙️ Downloads and dataset pre-processing
 
@@ -258,7 +259,7 @@ python extract/extract_ckpts.py --log_dir logs
 ```
 A json file `ckpts.json` containing checkpoints paths will then be created in `Qwen2-Audio/`. 
 
-Note that if you want to run inference and evaluation with our own checkpoints, you can download them (~3.2GB) in `Qwen2-Audio/ckpts` with
+Note that if you want to run inference and evaluation with our own checkpoints, you can download them (~3.45GB) in `Qwen2-Audio/ckpts` with
 ```shell
 python download/download_ckpts.py
 ```

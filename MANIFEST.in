@@ -1,0 +1,5 @@
+include INSTALL.md
+include LICENSE
+include pyproject.toml
+recursive-include peft_mcl *.py
+

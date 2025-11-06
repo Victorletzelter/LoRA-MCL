@@ -37,7 +37,7 @@ else:
     Trainer,
     TrainingArguments,
 )
-    from mcl_wrapper import MCLTrainer
+    from peft_mcl import MCLTrainer
 
 import numpy as np
 
@@ -192,7 +192,7 @@ def run_training(cfg, model, processor):
         max_length=cfg.model.max_length,
         prompt_template_with_space=cfg.model.prompt_template_with_space,
         add_eos_token_data=cfg.model.add_eos_token_data,
-        use_mcl_wrapper=cfg.model.use_mcl_wrapper
+        use_peft_mcl=cfg.model.use_peft_mcl
     )
     data_module.setup("fit")
     train_dataset = data_module._train_dset
@@ -242,7 +242,7 @@ def run_training(cfg, model, processor):
         report_to=["tensorboard", "mlflow"] if cfg.mlflow.enabled else "all",
     )
 
-    if cfg.model.use_mcl_wrapper is True and os.environ.get("USE_LOCAL_TRANSFORMERS", "false").lower() != "true":
+    if cfg.model.use_peft_mcl is True and os.environ.get("USE_LOCAL_TRANSFORMERS", "false").lower() != "true":
         training_args.eval_do_concat_batches = False
         training_args.prediction_loss_only = True
         trainer = MCLTrainer(

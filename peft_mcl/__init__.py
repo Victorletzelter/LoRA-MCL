@@ -1,7 +1,7 @@
 """
 MCL (Multiple Choice Learning) Wrapper for Transformers Models
 
-This package provides a general wrapper that can transform any Hugging Face 
+This package provides a general wrapper that can transform any Hugging Face
 transformers model into its MCL version with Winner-Take-All training.
 """
 
@@ -21,5 +21,5 @@ __all__ = [
     "MCLModelOutput",
     "get_peft_mcl",
     "MCLTrainer",
-    "patch_peft_for_mcl"
+    "patch_peft_for_mcl",
 ]

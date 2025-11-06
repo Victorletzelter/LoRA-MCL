@@ -624,13 +624,7 @@ class GroupLinear(nn.Module, LoraLayer):
         
         # Track whether we're using group convolutions yet
         self.initialized = False
-        
-        # Determine number of hypotheses
-        # try:
-        #     hypothesis_idx = int(adapter_name.replace("lora", ""))
-        #     self.max_hyps = hypothesis_idx + 1
-        # except ValueError:
-        #     self.max_hyps = 1
+
         self.max_hyps = num_hyps
 
         self.lora_A = nn.ModuleDict()
@@ -667,23 +661,13 @@ class GroupLinear(nn.Module, LoraLayer):
         
         # Calculate scaling
         self.scaling[adapter_name] = lora_alpha / r
-        
-        # Get adapter index
-        try:
-            adapter_idx = int(adapter_name.replace("lora", ""))
-        except ValueError:
-            adapter_idx = 0
-        
-        # Update max hypotheses if needed
-        self.max_hyps = max(self.max_hyps, adapter_idx + 1)
-        
+ 
         # Initialize group convolutions if this is the first adapter
         if not self.initialized:
             # Create shared group convolution layers
             device = self.base_layer.weight.device
             dtype = self.base_layer.weight.dtype
-            
-            # Create with a conservative size, we'll resize if needed
+
             self.lora_A['lora0'] = nn.Conv1d(
                 in_channels=self.max_hyps * self.in_features,
                 out_channels=self.max_hyps * r,
@@ -701,155 +685,34 @@ class GroupLinear(nn.Module, LoraLayer):
             ).to(device=device, dtype=dtype)
             
             self.initialized = True
-        
-        # Resize the group convolutions if needed
-        if adapter_idx >= self.max_hyps:
-            self._resize_group_convs(adapter_idx + 1)
-        
-        # Initialize weights for this adapter
+
+        # Initialize all adapters weights
         if init_lora_weights:
-            # Initialize first A layer with small random values
-            A_slice = self.lora_A['lora0'].weight[adapter_idx*r:(adapter_idx+1)*r]
-            nn.init.kaiming_uniform_(A_slice, a=math.sqrt(5))
-            
-            # Initialize B layer with zeros
-            B_slice = self.lora_B['lora0'].weight[adapter_idx*self.out_features:(adapter_idx+1)*self.out_features]
-            nn.init.zeros_(B_slice)
-        
-        # Set the active adapters
-        if adapter_name not in self.active_adapters:
-            self.active_adapters.append(adapter_name)
-    
-    def _resize_group_convs(self, new_size):
-        """Resize group convolutions to accommodate more adapters"""
-        device = self.lora_A['lora0'].weight.device
-        dtype = self.lora_A['lora0'].weight.dtype
-        
-        # Save existing weights
-        old_A_weights = self.lora_A['lora0'].weight.data
-        old_B_weights = self.lora_B['lora0'].weight.data
-        
-        # Create new group convolutions with larger size
-        self.lora_A['lora0'] = nn.Conv1d(
-            in_channels=new_size * self.in_features,
-            out_channels=new_size * self.r[self.active_adapters[0]],
-            kernel_size=1,
-            groups=new_size,
-            bias=False
-        ).to(device=device, dtype=dtype)
-        
-        self.lora_B['lora0'] = nn.Conv1d(
-            in_channels=new_size * self.r[self.active_adapters[0]],
-            out_channels=new_size * self.out_features,
-            kernel_size=1,
-            groups=new_size,
-            bias=False
-        ).to(device=device, dtype=dtype)
-        
-        # Copy existing weights to the new tensors
-        with torch.no_grad():
-            r = self.r[self.active_adapters[0]]
-            out_features = self.out_features
-            
-            # Copy A weights
-            self.lora_A['lora0'].weight.data[:old_A_weights.shape[0]] = old_A_weights
-            
-            # Copy B weights
-            self.lora_B['lora0'].weight.data[:old_B_weights.shape[0]] = old_B_weights
-        
-        self.max_hyps = new_size
-    
+            for k in range(self.max_hyps):
+                # Initialize first A layer with small random values
+                A_slice = self.lora_A['lora0'].weight[k*r:(k+1)*r]
+                nn.init.kaiming_uniform_(A_slice, a=math.sqrt(5))
+                
+                # Initialize B layer with zeros
+                B_slice = self.lora_B['lora0'].weight[k*self.out_features:(k+1)*self.out_features]
+                nn.init.zeros_(B_slice)
+
     def get_delta_weight(self, adapter):
         """Compute the delta weight for the given adapter"""
-        # Extract adapter index
-        try:
-            adapter_idx = int(adapter.replace("lora", ""))
-        except ValueError:
-            adapter_idx = 0
-        
-        r = self.r[adapter]
-        out_features = self.out_features
-        
-        # Get the weight slices for this adapter
-        A_slice = self.lora_A['lora0'].weight[adapter_idx*r:(adapter_idx+1)*r].squeeze(-1)  # [r, in_features]
-        B_slice = self.lora_B['lora0'].weight[adapter_idx*out_features:(adapter_idx+1)*out_features].squeeze(-1)  # [out_features, r]
-        
-        # Matrix multiplication (ensure fp32 on CPU)
-        device = A_slice.device
-        dtype = A_slice.dtype
-        cast_to_fp32 = device.type == "cpu" and (dtype == torch.float16 or dtype == torch.bfloat16)
-        
-        if cast_to_fp32:
-            A_slice = A_slice.float()
-            B_slice = B_slice.float()
-        
-        # Compute delta weight 
-        delta = B_slice @ A_slice * self.scaling[adapter]
-        
-        # Apply transpose if needed
-        if self.fan_in_fan_out:
-            delta = delta.T
-            
-        if cast_to_fp32:
-            delta = delta.to(dtype)
-            
-        return delta
+        raise NotImplementedError("Get delta weight is not implemented yet for MCL wrapper")
     
     def merge(self, safe_merge=False, adapter_names=None):
         """Merge the active adapter weights into the base weights"""
-        if getattr(self, "merged", False):
-            return
-        
-        adapter_names = adapter_names or self.active_adapters
-        if adapter_names is None:
-            return
-            
-        for adapter_name in adapter_names:
-            if adapter_name in self.r:
-                delta_weight = self.get_delta_weight(adapter_name)
-                
-                if safe_merge:
-                    # Check for potential issues
-                    base_weight = self.base_layer.weight.data.clone()
-                    base_weight += delta_weight
-                    
-                    if not torch.isfinite(base_weight).all():
-                        raise ValueError(f"NaNs detected when merging adapter {adapter_name}")
-                        
-                    self.base_layer.weight.data = base_weight
-                else:
-                    # Direct merge
-                    self.base_layer.weight.data += delta_weight
-                
-                # Track merged adapters
-                if not hasattr(self, "merged_adapters"):
-                    self.merged_adapters = []
-                self.merged_adapters.append(adapter_name)
-        
-        # Mark as merged
-        self.merged = True
+        raise NotImplementedError("Merge is not implemented yet for MCL wrapper")
     
     def unmerge(self):
         """Unmerge adapters from the base weights"""
-        if not getattr(self, "merged", False):
-            return
-            
-        for adapter_name in self.merged_adapters:
-            delta_weight = self.get_delta_weight(adapter_name)
-            self.base_layer.weight.data -= delta_weight
-        
-        self.merged_adapters = []
-        self.merged = False
+        raise NotImplementedError("Unmerge is not implemented yet for MCL wrapper")
     
     def forward(self, x, *args, **kwargs):
         """Forward pass using group convolutions for efficiency"""
         adapter_names = kwargs.pop("adapter_names", None)
-        
-        # Handle mixed batch inference with adapter_names
-        if adapter_names is not None:
-            # Not implementing here - would require additional logic
-            raise NotImplementedError("Mixed batch inference not supported yet")
-        
+
         # Handle merged or disabled state
         if getattr(self, "merged", False) or getattr(self, "disable_adapters", False):
             return self.base_layer(x, *args, **kwargs)
@@ -866,7 +729,7 @@ class GroupLinear(nn.Module, LoraLayer):
         active_adapter = self.active_adapters[0]  # Use first adapter in list
         
         # Get dropout layer for the active adapter
-        dropout = self.lora_dropout[active_adapter]
+        dropout = self.lora_dropout['lora0'] # We assume the dropout is the same for all adapters
         
         if len(self.active_adapters) > 1: # during training
             # During training, process ALL adapters at once
@@ -890,7 +753,7 @@ class GroupLinear(nn.Module, LoraLayer):
             # Inference mode - just process the active adapter
             active_idx = int(active_adapter.replace("lora", ""))
             
-            r = self.r[active_adapter]
+            r = self.r['lora0']
             out_features = self.out_features
             
             x = x.to(self.lora_A['lora0'].weight.dtype)
@@ -902,7 +765,7 @@ class GroupLinear(nn.Module, LoraLayer):
             B_slice = self.lora_B['lora0'].weight[active_idx*out_features:(active_idx+1)*out_features].squeeze(-1)  # [out_features, r]
             
             # Compute the LoRA adjustment
-            lora_output = (x @ A_slice.T @ B_slice.T) * self.scaling[active_adapter]
+            lora_output = (x @ A_slice.T @ B_slice.T) * self.scaling['lora0']
             result = result + lora_output.to(torch_result_dtype)
         
         return result
