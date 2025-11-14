@@ -11,6 +11,9 @@ We propose LoRA-MCL, a training scheme that extends next-token prediction in lan
 
 </br>
 
+![Overview of LoRA-MCL](lora-mcl.png)
+*Overview of LoRA-MCL. A linear layer with LoRA enabled is shown. Frozen base weights are in blue; trainable LoRA adapters are in light red. The forward pass (in gray) is computed independently for each hypothesis. Gradients (purple arrows) are stronger for the winning hypothesis compared to the others.*
+
 ## Repository Structure
 
 The repository is organized as follows:
@@ -33,7 +36,7 @@ We provide a general module named `peft_mcl` that is designed to be integrated i
 
 > **⚠️ Important:** You need a [HuggingFace](https://huggingface.co/) access token for most models. Set it with `export HF_TOKEN=your_token_here` before running the examples.
 
-> **📝 Note:** The `peft_mcl` module should work with any Hugging Face model from the transformers library with minimal configuration changes.
+> The `peft_mcl` module should work with any Hugging Face model from the transformers library with minimal configuration changes.
 
 To use the `peft_mcl` package, first clone the repository and create a conda environment:
 ```shell
@@ -54,7 +57,7 @@ lora_r = 16 # LoRA Rank
 lora_alpha = 16 # LoRA Alpha
 lora_dropout = 0.1 # LoRA Dropout (during training)
 target_modules = ["q_proj", "k_proj", "v_proj", "down_proj", "up_proj"] # Modules where LoRA is enabled
-lora_config = LoraConfig( # Standard LoRA configuration
+lora_config = LoraConfig(
     r=lora_r,
     lora_alpha=lora_alpha,
     target_modules=target_modules,
