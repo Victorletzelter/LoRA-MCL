@@ -524,6 +524,13 @@ export CKPT_PATH=${CKPT_MULTILINGUAL}
 bash scripts/v1_5/eval/evalTextCapsTranslated.sh # LoRA-MCL (K=1, r=16, BS, B=2)
 ```
 
+To reproduce the PCA plot, you can run:
+```shell
+python pca_plot.py --translation-plot
+```
+
+![PCA of hypotheses candidate embeddings](LLaVA/pca_hypothesis_candidate_embeddings.png)
+
 </details>
 
 <details>

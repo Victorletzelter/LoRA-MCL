@@ -42,3 +42,4 @@ LLaVA/llava/eval/generate_webpage_data_from_table.py
 LLaVA/llava/eval/model_vqa_science.py
 LLaVA/llava/eval/qa_baseline_gpt35.py
 LLaVA/llava/eval/summarize_gpt_review.py
+LLaVA/wandb/
