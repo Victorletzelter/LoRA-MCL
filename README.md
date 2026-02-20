@@ -22,7 +22,7 @@ The repository is organized as follows:
 
 - **Synthetic Data Experiments.** The [`toy/`](toy) directory contains experiments using Mixtures of Markov Chains for synthetic data evaluation.
 
-- **Audio Captioning with Qwen2-Audio.** The [`Qwen2-Audio/`](Qwen2-Audio) directory includes all code related to audio captioning experiments based on the Qwen2-Audio.
+- **Audio Captioning with Qwen2-Audio.** The [`Qwen2-Audio/`](Qwen2-Audio) directory includes all code related to audio captioning experiments based on Qwen2-Audio.
 
 - **Image Captioning with LLaVA.** To be released soon.
 
@@ -34,7 +34,7 @@ The [`tests/`](tests) directory is used for running tests (not exhaustive).
 
 We provide a general module named `peft_mcl` that is designed to be integrated in any model from the [transformers](https://github.com/huggingface/transformers) library.
 
-> **⚠️ Important:** You need a [HuggingFace](https://huggingface.co/) access token for most models. Set it with `export HF_TOKEN=your_token_here` before running the examples.
+> You need a [HuggingFace](https://huggingface.co/) access token for most models. Set it with `export HF_TOKEN=your_token_here` before running the examples.
 
 > The `peft_mcl` module should work with any Hugging Face model from the transformers library with minimal configuration changes.
 
@@ -121,7 +121,7 @@ To reproduce the synthetic data experiments, first go to the toy dir with `cd to
 
 Create a virtual environment with `conda create -y -n synthenv python=3.10.15`. Activate with `conda activate synthenv` and install the required packages with `pip install -r toy/requirements.txt`. 
 
-> **📝 Note:** LaTeX is enabled plot rendering. Install it with: `sudo apt-get install -y dvipng texlive-latex-extra texlive-fonts-recommended cm-super`.
+> LaTeX is enabled plot rendering. Install it with: `sudo apt-get install -y dvipng texlive-latex-extra texlive-fonts-recommended cm-super`.
 
 ### 🔄 Training and Visualisation
 
@@ -204,7 +204,7 @@ The datasets will be placed in `Qwen2-Audio/data`.
 <summary><h4>
 ⚙️(Optional) Reproducing dataset pre-processing </h4></summary>
 
-> **💡 Tip:** We recommend using our preprocessed data rather than reproducing the preprocessing steps, unless you specifically need to modify the preprocessing pipeline.
+> We recommend using our preprocessed data rather than reproducing the preprocessing steps, unless you specifically need to modify the preprocessing pipeline.
 
 If you want instead to download your own version of AudioCaps and Clotho and reproduce the steps, the download of the data followed by preprocessing on AudioCaps and Clotho can be done by first installing required packages with `sudo apt install -y openjdk-11-jdk ffmpeg zip && python3 -m pip install -U yt-dlp[default]`. You can then run:
 ```shell
@@ -377,7 +377,152 @@ This will generate a txt file containing the LaTeX command for generating the ta
 <details>
 <summary><h2> 🖼️ Image Captioning </h2></summary>
 
-Our image captioning codebase is built upon on the excellent [LLaVA](https://github.com/fe1ixxu/LLaVA) repository. This code was tested with Ubuntu 22.04. It will be released soon.
+Our image captioning codebase is built upon on the excellent [LLaVA](https://github.com/fe1ixxu/LLaVA) repository. This code was tested with Ubuntu 22.04.
+
+### 🔨 Setup
+
+#### ⚙️ Environment
+
+First go in the LLaVA directory with `cd LLaVA` and create a conda env with
+```shell
+conda create -n llavaMCL python=3.10 -y
+```
+Activate it with `conda activate llavaMCL` and install the required packages as follows. Please note that `flash-attn` requires a GPU for installation (we used a H100).
+```
+pip install --index-url https://download.pytorch.org/whl/cu118 torch==2.1.2 torchvision==0.16.2
+pip install flash-attn==2.7.3 --no-build-isolation
+pip install -r requirements.txt
+sudo apt-get install -y libcusparse-11-8
+```
+
+#### ⚙️ Downloads and dataset pre-processing
+
+The TextCaps dataset can be downloaded from the [official](https://textvqa.org/textcaps/download/) website.
+You can run
+```python
+python download_textcaps.py
+```
+to download (and unzip) the dataset, which will be located in `LLaVA/textcaps`.
+
+The files structure looks as follows.
+```shell
+└── LLaVA
+  └── textcaps
+    ├── LLaVA
+    ├── train_images/ # unzipped from train_val_images.zip (train and val in the same zip)
+    ├── test_images/ # unzipped from test_images.zip
+    └── TextCaps_0.1_{train,val,test}.json # annotations files
+```
+
+To format the captions of the dataset according to to LLaVA "conversation" format, run:
+```shell
+python preprocess.py # Ouput will be stored in LLaVA/playground/data/textCaps{Train,Val}.json
+```
+
+### 🔄 Training
+
+To launch LoRA-MCL training, go in the LLaVA directory (with `cd LLaVA`) and run (to submit on 4 GPUs for a global batch size of 8):
+```shell
+export RANK=8
+export ALPHA=32
+export WTA_MODE=relaxed-wta
+export WTA_EPSILON=0.1
+export NUM_HYPS=3
+bash scripts/v1_5/finetune_task_lora.sh # LoRA-MCL (relaxed, epsilon=0.1, K=3, r=8, alpha=32)
+```
+
+For LoRA-MLE training, run (to submit on 4 GPUs for a global batch size of 8):
+```shell
+export RANK=8
+export ALPHA=32
+bash scripts/v1_5/finetune_task_lora_single.sh # LoRA-MLE (r=8, alpha=32)
+```
+
+For LoRA-MoE training, run (to submit on 4 GPUs for a global batch size of 8):
+```shell
+export RANK=8
+export ALPHA=32
+export NUM_EXPERTS=3
+bash scripts/v1_5/finetune_task_lora_single_moe.sh # LoRA-MoE (3 experts, r=8, alpha=32)
+```
+
+### 🔄 Inference and evaluation
+
+We provide our checkpoints to reproduce the results of the papers. They can be downloaded with
+```shell
+python download_ckpts.py
+```
+The organization of the files is as follows:
+
+```shell
+└── LLaVA
+  └── ckpts
+    └── multilingual # Ckpts associated with the Bilingual image captioning experiments (Table 2 of the main paper)
+      └── relaxed_2h_01 # LoRA-MCL (relaxed, with epsilon = 0.1), with K = 2 and r = 8
+      └── wta_1h_rank16 # LoRA-MLE ckpt, with r = 16
+    └── textcaps # Ckpts associated with the quantiative results on TextCaps (Table 3 of the main paper)
+      └── 3h_moe # LoRA-MoE, with K = 3
+      └── relaxed_3h_01 # LoRA-MCL (relaxed, with epsilon = 0.1), with K = 3
+      └── wta_1h_rank8 # LoRA-MLE, with r = 8
+      └── wta_1h_rank24 # LoRA-MLE, with r = 24
+```
+You can then create an environemnt variable associated with each checkpoint path with:
+```shell
+source create_ckpts_paths.sh
+```
+The results on Textcaps and then be reproduced by running the following inferences:
+```shell
+### LoRA-MLE
+export CKPT_PATH=${CKPT_TEXTCAPS_WTA_1H_RANK8} # LoRA-MLE with r = 8
+export NUM_BOOST=1 # Corresponds to Beam size = 3
+bash scripts/v1_5/eval/evalTextCapsSingle.sh # LoRA-MLE (r=8, BS, B=3)
+export NUM_BOOST=2 # Corresponds to Beam size = 6
+bash LLaVA/scripts/v1_5/eval/evalTextCapsSingle.sh # LoRA-MLE (r=8, BS, B=3)
+export CKPT_PATH=${CKPT_TEXTCAPS_WTA_1H_RANK24} # LoRA-MLE with r = 24
+export NUM_BOOST=1 # Corresponds to Beam size = 3
+bash LLaVA/scripts/v1_5/eval/evalTextCapsSingle.sh # LoRA-MLE (r=24, BS, B=3)
+export NUM_BOOST=2 # Corresponds to Beam size = 6
+bash LLaVA/scripts/v1_5/eval/evalTextCapsSingle.sh # LoRA-MLE (r=24, BS, B=3)
+### LoRA-MoE
+export CKPT_PATH=${CKPT_TEXTCAPS_3H_MoE}
+export NUM_BOOST=1 # Corresponds to Beam size = 3
+bash LLaVA/scripts/v1_5/eval/evalTextCapsSingle.sh # LoRA-MoE (r=8, BS, B=3)
+export NUM_BOOST=2 # Corresponds to Beam size = 6
+bash LLaVA/scripts/v1_5/eval/evalTextCapsSingle.sh # LoRA-MLE (r=8, BS, B=3)
+### LoRA-MCL
+export CKPT_PATH=${CKPT_TEXTCAPS_RELAXED_3h_01}
+export NUM_BOOST=1 # Corresponds to Beam size = 1
+bash LLaVA/scripts/v1_5/eval/evalTextCaps.sh # LoRA-MCL (K=3, r=8, BS, B=1)
+export NUM_BOOST=2 # Corresponds to Beam size = 2
+bash LLaVA/scripts/v1_5/eval/evalTextCaps.sh # LoRA-MCL (K=3, r=8, BS, B=2)
+```
+
+### Bilingual 
+
+The following script translates half of the the TexCaps caption using T5. 
+```shell
+python LLaVA/translate_textcaps.py
+```
+
+The pre-translated captions are in `./playground/data/textCapsTrainTranslatedHalf.json` for the train set and `./playground/data/textCapsTest_answers_translated.jsonl` for the test set.
+
+To train the models on the bilingual setup, you can run the following training scripts:
+```shell
+### LoRA-MLE
+bash scripts/v1_5/finetune_task_lora_single_translated.sh
+### LoRA-MCL
+bash scripts/v1_5/finetune_task_lora_translated.sh
+```
+
+To run inference with our checkpoints, you can run the following script using the environment variables defined above with `source create_ckpts_paths.sh`:
+```shell
+### LoRA-MCL
+export CKPT_PATH=${CKPT_MULTILINGUAL_2H_RELAXED}
+bash scripts/v1_5/eval/evalTextCapsSingleTranslated.sh # LoRA-MCL (K=2, r=8, BS, B=1)
+### LoRA-MLE
+export CKPT_PATH=${CKPT_MULTILINGUAL}
+bash scripts/v1_5/eval/evalTextCapsTranslated.sh # LoRA-MCL (K=1, r=16, BS, B=2)
+```
 
 </details>
 
