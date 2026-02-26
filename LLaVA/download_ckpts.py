@@ -7,7 +7,7 @@ import zipfile
 rootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
 sys.path.append(os.path.dirname(os.environ["PROJECT_ROOT"]))
 
-url = "https://drive.google.com/file/d/1lNg9vgMh4UBN10Bb1TEAxy2aJR-Q_3dC/view?usp=sharing"
+url = "https://drive.google.com/file/d/1PW6Pd_Jd5oVbIdWt805nVgeWMQT1KI8_/view?usp=sharing"
 
 # Convert to downloadable format
 file_id = url.split("/d/")[1].split("/")[0]
@@ -21,7 +21,7 @@ if not os.path.exists(dataset_path):
     os.makedirs(dataset_path, exist_ok=True)
 
 # Download
-zip_path = os.path.join(dataset_path, "ckpt.zip")
+zip_path = os.path.join(dataset_path, "ckpts_textcaps_pkl_.zip")
 gdown.download(download_url, output=zip_path, quiet=False)
 
 # # Extract the path of the downloaded file

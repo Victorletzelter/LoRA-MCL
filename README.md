@@ -243,7 +243,7 @@ By default, fine-tuning runs for 10 epochs on Clotho and 1 epoch on AudioCaps, w
 When launching the trainings, the logs will be saved in `Qwen2-Audio/logs` following the [Hydra](https://github.com/facebookresearch/hydra) template, that is organized as follows:
 
 ```shell
-└── tsExperiments 
+└── Qwen2-Audio 
   └── logs
     └── <dataset_name>
         └── <run_folder_name> # By Default: <start_run_time>_<wta_training_mode>_epsilon-<epsilon_value>_<num_hyps>-hyp_rank-<rank>_dataset_name, where start_run_time is in the form %Y-%m-%d_%H-%M-%S
@@ -262,7 +262,7 @@ python extract/extract_ckpts.py --log_dir logs
 ```
 A json file `ckpts.json` containing checkpoints paths will then be created in `Qwen2-Audio/`. 
 
-Note that if you want to run inference and evaluation with our own checkpoints, you can download them (~3.45GB) in `Qwen2-Audio/ckpts` with
+Note that if you want to run inference and evaluation with our main checkpoints, you can download them (~3.45GB) in `Qwen2-Audio/ckpts` with
 ```shell
 python download/download_ckpts.py
 ```
@@ -270,6 +270,7 @@ In this case, run the path extraction script with the correct dir with:
 ```shell
 python extract/extract_ckpts.py --log_dir ckpts
 ```
+> **Optional.** For completeness, we also provide the full checkpoints and inference outputs as ZIP files (~20 GB) for [Clotho](https://drive.google.com/file/d/1us-4u5lgMu5vvyjWaTqgWjM-lig7CItB/view?usp=sharing), [AudioCaps](https://drive.google.com/file/d/1Zv8M4qxkBZCKFcMfur61YwqilRGCJLpa/view?usp=sharing), along with a [README](https://drive.google.com/file/d/19-3dmAWvLnmhfCEeL7iybyUBV-R5vAaI/view?usp=sharing).
 
 You can then create environment variables with the checkpoint paths with:
 ```shell
@@ -448,7 +449,7 @@ bash scripts/v1_5/finetune_task_lora_single_moe.sh # LoRA-MoE (3 experts, r=8, a
 
 ### 🔄 Inference and evaluation
 
-We provide our checkpoints to reproduce the results of the papers. They can be downloaded with
+We provide our checkpoints, as well as our predicted caption (as `pkl` files) to reproduce the results of the papers. They can be downloaded (~620MB) with
 ```shell
 python download_ckpts.py
 ```
@@ -465,6 +466,7 @@ The organization of the files is as follows:
       └── relaxed_3h_01 # LoRA-MCL (relaxed, with epsilon = 0.1), with K = 3
       └── wta_1h_rank8 # LoRA-MLE, with r = 8
       └── wta_1h_rank24 # LoRA-MLE, with r = 24
+    └── pkl_paths.md # Description of the pickle files.
 ```
 You can then create an environemnt variable associated with each checkpoint path with:
 ```shell
@@ -503,7 +505,6 @@ The following script translates half of the the TexCaps caption using T5.
 ```shell
 python LLaVA/translate_textcaps.py
 ```
-
 The pre-translated captions are in `./playground/data/textCapsTrainTranslatedHalf.json` for the train set and `./playground/data/textCapsTest_answers_translated.jsonl` for the test set.
 
 To train the models on the bilingual setup, you can run the following training scripts:
@@ -530,6 +531,7 @@ python pca_plot.py --translation-plot
 ```
 
 ![PCA of hypotheses candidate embeddings](LLaVA/pca_hypothesis_candidate_embeddings.png)
+*PCA of hypotheses candidate embeddings*
 
 </details>
 
